@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-import UserModel from '../resources/users/user.model.js';
+import UserRepo from '../resources/users/user.repository.js';
 dotenv.config();
 
 const jwtauth = async (req, res, next) => {
@@ -12,7 +12,8 @@ const jwtauth = async (req, res, next) => {
       try {
         let payload = jwt.verify(token, process.env.SECRET_KEY);
         // check whether the user is same or not been deleted from DB;
-        let user_still_exists = UserModel.checkUserByMobileNo(payload.mobile);
+        const userRepoObj = new UserRepo();
+        let user_still_exists = await userRepoObj.checkUserExists(payload.mobile);
         if(!user_still_exists){
           return res.status(400).json({
             success:false,

@@ -1,9 +1,7 @@
-
-import validator from 'validator';
 import jwt from 'jsonwebtoken';
 import CustomError from "../../utils/customError.js";
-import UserModel from './user.model.js';
 import generateOTP from '../../utils/generateOTP.js';
+import UserRepo from './user.repository.js';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -11,7 +9,7 @@ dotenv.config();
 export default class UserController {
 
   constructor(){
-    this.otpStore = {};
+    this.repo = new UserRepo();
   }
 
   getUser(req, res){
@@ -25,8 +23,9 @@ export default class UserController {
     }
   }
 
-  changePassword(req, res, next){
+  async changePassword(req, res, next){
     try {
+
       if(!req.user){
         return res.status(400).json({
           success:false,
@@ -35,28 +34,24 @@ export default class UserController {
       }
 
       const {newpassword} = req.body;
-      const {id} = req.user;
-      // console.log(newpassword, id);
-      const password_updated = UserModel.changePassword(id, newpassword);
+      const {mobile} = req.user;
+      console.log(newpassword, mobile);
 
-      if(!password_updated){
-        throw new CustomError("Not able to change password, please try later", 502);
-      }
-      return res.status(502).json({
+      await this.repo.updatePassword(mobile, newpassword);
+      return res.status(200).json({
         success:true,
         message:"Password succefully changed",
-        data:password_updated
       });
     } catch (error) {
       next(error);
     }
   }
 
-  userSignUp(req, res, next){
+  async userSignUp(req, res, next){
     try {
-      let {name, mobile, password} = req.body;
+      let {name, mobile, email, password} = req.body;
 
-      const user_exists = UserModel.checkUserByMobileNo(mobile);
+      const user_exists = await this.repo.checkUserExists(mobile);
 
       if(user_exists){
         throw new CustomError("User with current mobile number already exists..!", 400);
@@ -64,11 +59,12 @@ export default class UserController {
 
       let user_obj = {
         name : name.trim(),
+        email:email,
         mobile: mobile,
         password: password
       };
 
-      let user_created = UserModel.userSignUp(user_obj);
+      let user_created = await this.repo.registerUserToDB(user_obj);
 
       if(!user_created){
         throw new CustomError("Falied to add user, please try later", 507); 
@@ -77,7 +73,7 @@ export default class UserController {
       return res.status(201).json({
         success:true,
         message:"User added sucessfully",
-        user:user_obj
+        user:user_created
       });
 
     } catch (error) {
@@ -85,25 +81,28 @@ export default class UserController {
     }
   }
 
-  sendOTP(req, res, next){
+  async sendOTP(req, res, next){
     try {
       let {mobile} = req.body;
 
-      const user_exists = UserModel.checkUserByMobileNo(mobile);
+      const user_exists = await this.repo.checkUserExists(mobile);
 
       if(!user_exists){
         throw new CustomError("Mobile number not registered", 404);
       }
       
       const otp_obj = generateOTP(mobile);
+      const otp_db_obj = await this.repo.sendOTPToDB(otp_obj);
 
-      this.otpStore = otp_obj;
+      if(!otp_db_obj){
+        throw new CustomError("Not able to generate OTP..! Please try again", 500);
+      }
 
       return res.status(201).json({
         success:true,
         message:"OTP Generated",
-        mobile:otp_obj.mobile,
-        OTP:otp_obj.details.otp,
+        mobile:otp_db_obj.mobile,
+        OTP:otp_db_obj.otp_code,
         ExpiresIn: `30 seconds`
       });
 
@@ -112,24 +111,31 @@ export default class UserController {
     }
   }
 
-  verifyOTP(req, res, next){
+  async verifyOTP(req, res, next){
     try {
       const {mobile, otp} = req.body;
+
+      console.log(mobile, otp);
 
       if (!mobile || !otp) {
         throw new CustomError("Mobile No. and OTP are required", 400);
       }
 
-      if (this.otpStore.mobile !== mobile) {
+      const otp_obj = await this.repo.sendOTPdetails(mobile);
+
+      console.log(otp_obj);
+
+      if (otp_obj.mobile !== mobile) {
         throw new CustomError("No OTP requested for this Mobile Number", 400);
       }
 
-      if (Date.now() > this.otpStore.details.expiresAt) {
-        delete this.otpStore.details;
+      if (Date.now() > otp_obj.expiresAt) {
+        const data = await this.repo.deleteOTP(otp_obj.mobile, otp_obj.id);
+        console.log("Data : " , data);
         return res.status(401).json({ message: "OTP expired" });
       }
 
-      if (this.otpStore.details.otp !== otp) {
+      if (otp_obj.otp !== otp) {
         return res.status(401).json({ message: "Invalid OTP" });
       }
 
@@ -139,7 +145,7 @@ export default class UserController {
 
       const token = jwt.sign(payload, process.env.SECRET_KEY, {expiresIn:6000});
 
-      delete this.otpStore.details; 
+      await this.repo.deleteOTP(otp_obj.mobile, otp_obj.id);
 
       return res.json({ 
         success:true,
@@ -152,7 +158,25 @@ export default class UserController {
     }
   }
 
-  forgotPassword(req, res, next){
-    this.sendOTP(req, res, next);
+  async forgotPassword(req, res, next){
+    try {
+      const {mobile, newpassword} = req.body;
+
+      const user_exists = await this.repo.checkUserExists(mobile);
+
+      if(!user_exists){
+        throw new CustomError("User not exists please sign up", 400);
+      }
+
+      await this.repo.updatePassword(mobile, newpassword);
+
+      return res.json({ 
+        success:true,
+        message:"Password updated successfully...!",
+      });
+
+    } catch (error) {
+      next(error);
+    }
   }
 }
