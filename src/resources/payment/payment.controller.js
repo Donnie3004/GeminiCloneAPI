@@ -74,17 +74,14 @@ export default class PaymentController{
     }
   }
 
-  async getSubscriptionStatus(req, res){
+  async getSubscriptionStatus(req, res, next){
     try {
       const mobile = req.user.mobile;
       const userRepoObj = new UserRepo();
       const user = await userRepoObj.checkUserExists(mobile);
 
       if (!user) {
-        return res.status(404).json({ 
-          success: false, 
-          message: 'User not found' 
-        });
+        throw new customElements('User not found', 404);
       }
 
       let subscriptionDetails = null;
@@ -104,7 +101,7 @@ export default class PaymentController{
         }
       }
 
-      res.json({
+      return res.status(200).json({
         success: true,
         data: {
           tier: user.subscriptionTier || 'basic',
@@ -117,11 +114,7 @@ export default class PaymentController{
 
     } catch (error) {
       console.error('Get subscription status error:', error);
-      res.status(500).json({ 
-        success: false, 
-        message: 'Failed to get subscription status',
-        error: error.message 
-      });
+      next(error);
     }
   }
   

@@ -3,6 +3,8 @@ import CustomError from "../../utils/customError.js";
 import generateOTP from '../../utils/generateOTP.js';
 import UserRepo from './user.repository.js';
 import dotenv from 'dotenv';
+import validator from 'validator';
+import { hashingPassword } from '../../utils/password_hashing.js';
 dotenv.config();
 
 
@@ -25,31 +27,45 @@ export default class UserController {
 
   async changePassword(req, res, next){
     try {
-
       if(!req.user){
-        return res.status(400).json({
-          success:false,
-          message:"Kindly login to change password"
-        });
+        throw new CustomError("Kindly login to change password", 400);
       }
-
       const {newpassword} = req.body;
       const {mobile} = req.user;
-      console.log(newpassword, mobile);
+      
+      if(!newpassword){
+        throw new CustomError("Kindly enter the new password", 400);
+      }
 
       await this.repo.updatePassword(mobile, newpassword);
       return res.status(200).json({
         success:true,
-        message:"Password succefully changed",
+        message:"Password changed succefully",
       });
     } catch (error) {
       next(error);
     }
   }
-
+  // User signup function where we validate for unique mobile number from DB.
   async userSignUp(req, res, next){
     try {
       let {name, mobile, email, password} = req.body;
+
+      if(!name || !mobile || !email || !password){
+        throw new CustomError("Kindly fill in all the fields..!", 400);
+      }
+
+      if(!validator.isAlpha(name)){
+        throw new CustomError("Name should have only alphabets..!", 400);
+      }
+
+      if(!validator.isEmail(email)){
+        throw new CustomError("Enter a valid Email...!", 400);
+      }
+
+      if(mobile.length !== 10){
+        throw new CustomError("Mobile should be 10-digit number...!", 400);
+      }
 
       const user_exists = await this.repo.checkUserExists(mobile);
 
@@ -57,11 +73,13 @@ export default class UserController {
         throw new CustomError("User with current mobile number already exists..!", 400);
       }
 
+      const hashed_password = await hashingPassword(password);
+
       let user_obj = {
         name : name.trim(),
         email:email,
         mobile: mobile,
-        password: password
+        password: hashed_password
       };
 
       let user_created = await this.repo.registerUserToDB(user_obj);
@@ -85,6 +103,10 @@ export default class UserController {
     try {
       let {mobile} = req.body;
 
+      if(mobile.length !== 10){
+        throw new CustomError("Mobile should be 10-digit number...!", 400);
+      }
+
       const user_exists = await this.repo.checkUserExists(mobile);
 
       if(!user_exists){
@@ -95,7 +117,7 @@ export default class UserController {
       const otp_db_obj = await this.repo.sendOTPToDB(otp_obj);
 
       if(!otp_db_obj){
-        throw new CustomError("Not able to generate OTP..! Please try again", 500);
+        throw new CustomError("Not able to generate OTP..! Please try again later", 500);
       }
 
       return res.status(201).json({
@@ -115,15 +137,11 @@ export default class UserController {
     try {
       const {mobile, otp} = req.body;
 
-      console.log(mobile, otp);
-
       if (!mobile || !otp) {
         throw new CustomError("Mobile No. and OTP are required", 400);
       }
 
       const otp_obj = await this.repo.sendOTPdetails(mobile);
-
-      console.log(otp_obj);
 
       if (otp_obj.mobile !== mobile) {
         throw new CustomError("No OTP requested for this Mobile Number", 400);
@@ -143,8 +161,9 @@ export default class UserController {
         mobile : mobile
       }
 
-      const token = jwt.sign(payload, process.env.SECRET_KEY, {expiresIn:6000});
+      const token = jwt.sign(payload, process.env.SECRET_KEY, {expiresIn:Number(process.env.JWT_SESSION_TIME)});
 
+      // I am doing hard delete we can just change the status (is_used) also..!
       await this.repo.deleteOTP(otp_obj.mobile, otp_obj.id);
 
       return res.json({ 
@@ -162,10 +181,14 @@ export default class UserController {
     try {
       const {mobile, newpassword} = req.body;
 
+      if(!mobile || !newpassword){
+        throw new CustomError("Mobile number and new password required...!", 400);
+      }
+
       const user_exists = await this.repo.checkUserExists(mobile);
 
       if(!user_exists){
-        throw new CustomError("User not exists please sign up", 400);
+        throw new CustomError("User not exists, please sign up", 400);
       }
 
       await this.repo.updatePassword(mobile, newpassword);

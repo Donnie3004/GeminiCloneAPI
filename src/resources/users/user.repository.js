@@ -1,4 +1,3 @@
-
 import { v4 as uuidv4 } from 'uuid';
 import { pool } from '../../config/db.config.js';
 
@@ -85,7 +84,7 @@ export default class UserRepo{
 
   async updateSubscriptionStatus(mobile){
     console.log("iinside susb update..!");
-    const query = `UPDATE users SET subscription_tier = $1 WHERE id = $2 AND subscription_id IS NOT NULL;`;
+    const query = `UPDATE users SET subscription_tier = $1 WHERE mobile_number = $2 AND subscription_id IS NOT NULL`;
     await pool.query(query, ["Pro", mobile]);
   }
 
