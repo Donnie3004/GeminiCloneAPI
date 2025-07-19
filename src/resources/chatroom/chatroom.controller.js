@@ -1,4 +1,5 @@
 import CustomError from "../../utils/customError.js";
+import MessageQueueService from "../../utils/messageQueue/queue.producer.js";
 import ChatroomRepo from "./chatroom.repository.js";
 
 export default class name {
@@ -156,6 +157,7 @@ export default class name {
   }
 
   async sendMessage(req, res, next) {
+    console.log("here");
     try {
       // const errors = validationResult(req);
       // if (!errors.isEmpty()) {
@@ -180,26 +182,8 @@ export default class name {
 
       //From here --------------
       // Check user's subscription and daily limits
-      const userQuery = `
-        SELECT 
-          subscription_tier,
-          daily_message_count,
-          last_reset_date
-        FROM users 
-        WHERE id = $1
-      `;
       
-      const userResult = await pool.query(userQuery, [userId]);
-      const user = userResult.rows[0];
-
-      // Reset daily count if it's a new day
-      if (user.last_reset_date < new Date().toISOString().split('T')[0]) {
-        await pool.query(
-          'UPDATE users SET daily_message_count = 0, last_reset_date = CURRENT_DATE WHERE id = $1',
-          [userId]
-        );
-        user.daily_message_count = 0;
-      }
+      const user = await this.repo.dbvalidations(userId);
 
       // Check rate limits for Basic tier
       if (user.subscription_tier === 'Basic' && user.daily_message_count >= 5) {
@@ -215,30 +199,20 @@ export default class name {
       }
 
       // Save user message
-      const userMessageQuery = `
-        INSERT INTO messages (chatroom_id, user_id, content, message_type)
-        VALUES ($1, $2, $3, 'user')
-        RETURNING id, content, message_type, created_at
-      `;
-      
-      const userMessageResult = await pool.query(userMessageQuery, [id, userId, content]);
-      const userMessage = userMessageResult.rows[0];
 
-      // Increment user's daily message count
-      await pool.query(
-        'UPDATE users SET daily_message_count = daily_message_count + 1 WHERE id = $1',
-        [userId]
-      );
+      const userMessage = await this.repo.sendMessageToDB(id, userId, content);
+      
 
       // Here we'll add the message to queue for Gemini API processing
       // For now, we'll return immediately and process async
-      const messageQueue = require('../services/messageQueue');
-      await messageQueue.addGeminiJob({
+
+      const messageQueue = await MessageQueueService.addGeminiJob({
         chatroomId: id,
         userId: userId,
         userMessage: content,
         messageId: userMessage.id
       });
+      
 
       res.status(200).json({
         success: true,
@@ -256,11 +230,7 @@ export default class name {
 
     } catch (error) {
       console.error('Error sending message:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Internal server error',
-        error: process.env.NODE_ENV === 'development' ? error.message : undefined
-      });
+      next(error)
     }
   }
 }

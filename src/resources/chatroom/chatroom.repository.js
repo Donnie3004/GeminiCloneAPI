@@ -59,7 +59,49 @@ export default class ChatroomRepo {
     return chatroomResult;   
   }
 
-  
+  async dbvalidations(userId){
+    const userQuery = `
+        SELECT 
+          subscription_tier,
+          daily_message_count,
+          last_reset_date
+        FROM users 
+        WHERE id = $1
+      `;
+      
+      const userResult = await pool.query(userQuery, [userId]);
+      const user = userResult.rows[0];
+
+      // Reset daily count if it's a new day
+      if (user.last_reset_date < new Date().toISOString().split('T')[0]) {
+        await pool.query(
+          'UPDATE users SET daily_message_count = 0, last_reset_date = CURRENT_DATE WHERE id = $1',
+          [userId]
+        );
+        user.daily_message_count = 0;
+      }
+      console.log(user);
+      return user;
+  }
+
+  async sendMessageToDB(id, userId, content){
+    const userMessageQuery = `
+        INSERT INTO messages (id, chatroom_id, user_id, content, message_type)
+        VALUES ($1, $2, $3, $4, 'user')
+        RETURNING id, content, message_type, created_at
+      `;
+      
+      const userMessageResult = await pool.query(userMessageQuery, [uuidv4(), id, userId, content]);
+      const userMessage = userMessageResult.rows[0];
+
+      // Increment user's daily message count
+      await pool.query(
+        'UPDATE users SET daily_message_count = daily_message_count + 1 WHERE id = $1',
+        [userId]
+      );
+
+      return userMessage;
+  }
 
   
 }
