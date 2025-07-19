@@ -78,4 +78,15 @@ export default class UserRepo{
     await pool.query(query, [newpassword, mobile]);
   }
 
+  async updateSubscription(userId, subsId){
+    const query = `UPDATE users SET subscription_id = $1 WHERE id = $2;`;
+    await pool.query(query, [subsId, userId]);
+  }
+
+  async updateSubscriptionStatus(mobile){
+    console.log("iinside susb update..!");
+    const query = `UPDATE users SET subscription_tier = $1 WHERE id = $2 AND subscription_id IS NOT NULL;`;
+    await pool.query(query, ["Pro", mobile]);
+  }
+
 }

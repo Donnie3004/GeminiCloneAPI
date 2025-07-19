@@ -1,27 +1,51 @@
-import messageQueue from "../../config/queue.config";
-import CustomError from "../customError";
+import { QueueEvents } from "bullmq";
+import messageQueue from "../../config/queue.config.js";
+import CustomError from "../customError.js";
+import IORedis from 'ioredis';
+
+const connection = new IORedis({
+  host: process.env.REDIS_HOST,
+  port: Number(process.env.REDIS_PORT),
+  password: undefined,
+  maxRetriesPerRequest: null
+});
+
+ const queueName = 'gemini-message-processing';
+
+
+// // Producer Queue
+// const messageQueue = new Queue(queueName, { connection });
+
+// QueueEvents for tracking job completion
+const queueEvents = new QueueEvents(queueName, { connection });
+await queueEvents.waitUntilReady(); //
+
 
 export default class MessageQueueService {
   // Add a new job to the queue
   static async addGeminiJob(jobData) {
     try {
-      const job = await messageQueue.add(jobData, {
-        delay: 1000, // 1 second delay
-        attempts: 3, // Retry 3 times on failure
+      const job = await messageQueue.add('gemini-job', jobData, {
+        delay: 1000,
+        attempts: 3,
         backoff: {
           type: 'exponential',
           delay: 2000,
         },
-        removeOnComplete: 50, // Keep last 50 completed jobs
-        removeOnFail: 20, // Keep last 20 failed jobs
+        removeOnComplete: 50,
+        removeOnFail: 20,
       });
-      
+
       console.log(`Added job ${job.id} to queue`);
       return job;
     } catch (error) {
       console.error('Error adding job to queue:', error);
       throw new CustomError("Error adding job to queue", 500);
     }
+  }
+
+  static getQueueEvents() {
+    return queueEvents;
   }
   
   // // Get queue statistics

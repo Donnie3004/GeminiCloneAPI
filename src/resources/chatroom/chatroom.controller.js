@@ -202,16 +202,23 @@ export default class name {
 
       const userMessage = await this.repo.sendMessageToDB(id, userId, content);
       
+      console.log("User meesage : ", userMessage);
 
       // Here we'll add the message to queue for Gemini API processing
       // For now, we'll return immediately and process async
 
-      const messageQueue = await MessageQueueService.addGeminiJob({
+      const job = await MessageQueueService.addGeminiJob({
         chatroomId: id,
         userId: userId,
         userMessage: content,
         messageId: userMessage.id
       });
+
+      
+
+      const queueEvenets = MessageQueueService.getQueueEvents();
+
+      const result = await job.waitUntilFinished(queueEvenets); //wait for gemini for response
       
 
       res.status(200).json({
@@ -224,7 +231,7 @@ export default class name {
             message_type: userMessage.message_type,
             created_at: userMessage.created_at
           },
-          processing_status: 'queued'
+          AI_Response: result.aiMessage
         }
       });
 

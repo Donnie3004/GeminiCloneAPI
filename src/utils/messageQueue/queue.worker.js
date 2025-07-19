@@ -2,11 +2,13 @@ import { Worker } from "bullmq";
 import MessageRepository from "../../resources/messages/messages.repository.js";
 import chatWithGemini from "../geminiApiHit.js";
 import CustomError from "../customError.js";
+import dotenv from "dotenv";
+dotenv.config();
 
 
 const worker = new Worker('gemini-message-processing', async (job) => {
   const { chatroomId, userId, userMessage } = job.data;
-
+  console.log("Worker trminal : ", chatroomId);
   try {
     console.log(`Processing job ${job.id} for chatroom ${chatroomId}`);
     const messageRepo = new MessageRepository();
@@ -21,9 +23,9 @@ const worker = new Worker('gemini-message-processing', async (job) => {
     
     
     context += `\nUser: ${userMessage}\n\nPlease provide a helpful response:`;
-
+    console.log(context);
     const aiResponse = await chatWithGemini(context);
-
+    console.log(aiResponse);
     if(!aiResponse){
       const reply = await messageRepo.InsertfailedResponse(chatroomId, userId);
       throw new CustomError(reply.fallback, 500);
@@ -42,6 +44,7 @@ const worker = new Worker('gemini-message-processing', async (job) => {
     host: process.env.REDIS_HOST || 'localhost',
     port: Number(process.env.REDIS_PORT) || 6379,
     password: process.env.REDIS_PASSWORD || undefined,
+    maxRetriesPerRequest: null
   },
 });
 

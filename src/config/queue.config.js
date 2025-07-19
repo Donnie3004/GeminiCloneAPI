@@ -1,6 +1,6 @@
 import { Queue } from 'bullmq';
 import  dotenv  from 'dotenv';
-dotenv.configDotenv();
+dotenv.config();
 
 const messageQueue = new Queue('gemini-message-processing', {  // put in .env
   connection: {

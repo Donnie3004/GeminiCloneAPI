@@ -2,7 +2,8 @@ import { pool } from "../../config/db.config.js";
 import { v4 as uuidv4 } from 'uuid';
 
 export default class MessageRepository {
-  async getMessageHistory(){
+  async getMessageHistory(chatroomId){
+    console.log("Inside getmessage history");
     const historyQuery = `
       SELECT content, message_type, created_at
       FROM messages
@@ -23,6 +24,7 @@ export default class MessageRepository {
     `;
     const saved = await pool.query(insertQuery, [uuidv4(), chatroomId, userId, aiResponse]);
     const aiMessage = saved.rows[0];
+    console.log(aiMessage);
     return aiMessage;    
   }
 
