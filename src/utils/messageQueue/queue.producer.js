@@ -9,6 +9,7 @@ const connection = new IORedis(process.env.REDIS_URL, {
   // host: process.env.REDIS_HOST,
   // port: Number(process.env.REDIS_PORT),
   // password: undefined,
+  family:0,
   maxRetriesPerRequest: null
 });
 

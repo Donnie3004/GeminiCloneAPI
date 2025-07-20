@@ -5,9 +5,9 @@ import CustomError from "../customError.js";
 import dotenv from "dotenv";
 dotenv.config();
 
+const redisURL = new URL(process.env.REDIS_URL);
 
 const worker = new Worker(process.env.QUEUE_NAME, async (job) => {
-  
   try {
     const { chatroomId, userId, userMessage } = job.data;
     console.log(`Processing job ${job.id} for chatroom ${chatroomId}`);
@@ -41,13 +41,14 @@ const worker = new Worker(process.env.QUEUE_NAME, async (job) => {
     console.error(`Error in job ${job.id}:`, error);
   }
 }, {
-  // connection: {
-  //   host: process.env.REDIS_HOST || 'localhost',
-  //   port: Number(process.env.REDIS_PORT) || 6379,
-  //   password: process.env.REDIS_PASSWORD || undefined,
-  //   maxRetriesPerRequest: null
-  // },
-  connection : new URL(process.env.REDIS_URL)
+  connection: {
+    host: redisURL.hostname || 'localhost',
+    port: redisURL.port || 6379,
+    password: redisURL.password || undefined,
+    maxRetriesPerRequest: null,
+     family:0
+  },
+  // connection : new URL(process.env.REDIS_URL)
 });
 
 worker.on('completed', (job) => {
