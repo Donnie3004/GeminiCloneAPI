@@ -5,10 +5,11 @@ import paymentRouter from './src/resources/payment/payment.routes.js';
 import { pool } from './src/config/db.config.js';
 import chatroomRouter from './src/resources/chatroom/chatroom.routes.js';
 import webhookController from './src/resources/webhook/webhook.controller.js';
-
+import dotenv from 'dotenv';
+dotenv.config();
 
 const app = express();
-const port = 3000;
+const port = process.env.EXPRESS_PORT;
 
 const WebhookController = new webhookController();
 app.post('/webhook', express.raw({ type: 'application/json' }), WebhookController.handleWebhook);

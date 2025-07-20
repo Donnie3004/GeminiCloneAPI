@@ -5,10 +5,10 @@ import IORedis from 'ioredis';
 import dotenv from 'dotenv';
 dotenv.config();
 
-const connection = new IORedis({
-  host: process.env.REDIS_HOST,
-  port: Number(process.env.REDIS_PORT),
-  password: undefined,
+const connection = new IORedis(process.env.REDIS_URL, {
+  // host: process.env.REDIS_HOST,
+  // port: Number(process.env.REDIS_PORT),
+  // password: undefined,
   maxRetriesPerRequest: null
 });
 

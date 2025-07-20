@@ -41,12 +41,13 @@ const worker = new Worker(process.env.QUEUE_NAME, async (job) => {
     console.error(`Error in job ${job.id}:`, error);
   }
 }, {
-  connection: {
-    host: process.env.REDIS_HOST || 'localhost',
-    port: Number(process.env.REDIS_PORT) || 6379,
-    password: process.env.REDIS_PASSWORD || undefined,
-    maxRetriesPerRequest: null
-  },
+  // connection: {
+  //   host: process.env.REDIS_HOST || 'localhost',
+  //   port: Number(process.env.REDIS_PORT) || 6379,
+  //   password: process.env.REDIS_PASSWORD || undefined,
+  //   maxRetriesPerRequest: null
+  // },
+  connection : new URL(process.env.REDIS_URL)
 });
 
 worker.on('completed', (job) => {
