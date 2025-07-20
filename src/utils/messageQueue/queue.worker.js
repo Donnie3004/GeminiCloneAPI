@@ -6,11 +6,12 @@ import dotenv from "dotenv";
 dotenv.config();
 
 
-const worker = new Worker('gemini-message-processing', async (job) => {
-  const { chatroomId, userId, userMessage } = job.data;
-  console.log("Worker trminal : ", chatroomId);
+const worker = new Worker(process.env.QUEUE_NAME, async (job) => {
+  
   try {
+    const { chatroomId, userId, userMessage } = job.data;
     console.log(`Processing job ${job.id} for chatroom ${chatroomId}`);
+    
     const messageRepo = new MessageRepository();
     const history = await messageRepo.getMessageHistory(chatroomId);
 
@@ -48,7 +49,6 @@ const worker = new Worker('gemini-message-processing', async (job) => {
   },
 });
 
-// Event listeners
 worker.on('completed', (job) => {
   console.log(`Job ${job.id} completed successfully.`);
 });

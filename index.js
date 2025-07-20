@@ -4,8 +4,6 @@ import errorHandler from './src/middlewares/errorHandler.js';
 import paymentRouter from './src/resources/payment/payment.routes.js';
 import { pool } from './src/config/db.config.js';
 import chatroomRouter from './src/resources/chatroom/chatroom.routes.js';
-// import webhookRouter from './src/resources/webhook/webhook.routes.js';
-import bodyParser from 'body-parser';
 import webhookController from './src/resources/webhook/webhook.controller.js';
 
 
@@ -14,7 +12,6 @@ const port = 3000;
 
 const WebhookController = new webhookController();
 app.post('/webhook', express.raw({ type: 'application/json' }), WebhookController.handleWebhook);
-// app.use('/webhook', webhookRouter);
 
 app.use(express.urlencoded({extended:true}));
 app.use(express.json());
@@ -36,7 +33,7 @@ const startServer = async () => {
     
   } catch (error) {
     console.error('Failed to connect to PostgreSQL:', error);
-    process.exit(1); // Exit the app if DB connection fails
+    process.exit(1); 
   }
 }
 startServer();

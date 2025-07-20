@@ -27,8 +27,8 @@ export default class PaymentController{
 
       // Create or retrieve Stripe customer
       let customer;
-      if (user.subscription_id) {
-        customer = await stripe.customers.retrieve(user.subscription_id);
+      if (user.StripeCustomerID) {
+        customer = await stripe.customers.retrieve(user.StripeCustomerID);
       } else {
         customer = await stripe.customers.create({
           email: user.email,
@@ -86,14 +86,14 @@ export default class PaymentController{
 
       let subscriptionDetails = null;
       
-      if (user.subscription_id) {
+      console.log(user);
+      
+      if (user.StripeSubscriptionID) {
         try {
-          const subscription = await stripe.subscriptions.retrieve(user.subscription_id);
+          const subscription = await stripe.subscriptions.retrieve(user.StripeSubscriptionID);
           subscriptionDetails = {
             id: subscription.id,
             status: subscription.status,
-            currentPeriodEnd: subscription.current_period_end,
-            currentPeriodStart: subscription.current_period_start,
             cancelAtPeriodEnd: subscription.cancel_at_period_end
           };
         } catch (stripeError) {
@@ -104,10 +104,8 @@ export default class PaymentController{
       return res.status(200).json({
         success: true,
         data: {
-          tier: user.subscriptionTier || 'basic',
-          status: user.subscriptionStatus || 'inactive',
-          dailyMessageCount: user.dailyMessageCount || 0,
-          dailyLimit: user.subscriptionTier === 'pro' ? null : 5,
+          tier: user.subscription_tier || 'Basic',
+          dailyLimit: user.subscription_tier === 'Pro' ? "No Limit" : 5,
           subscriptionDetails
         }
       });

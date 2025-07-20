@@ -2,6 +2,8 @@ import { QueueEvents } from "bullmq";
 import messageQueue from "../../config/queue.config.js";
 import CustomError from "../customError.js";
 import IORedis from 'ioredis';
+import dotenv from 'dotenv';
+dotenv.config();
 
 const connection = new IORedis({
   host: process.env.REDIS_HOST,
@@ -10,15 +12,9 @@ const connection = new IORedis({
   maxRetriesPerRequest: null
 });
 
- const queueName = 'gemini-message-processing';
-
-
-// // Producer Queue
-// const messageQueue = new Queue(queueName, { connection });
-
-// QueueEvents for tracking job completion
+const queueName = process.env.QUEUE_NAME || 'gemini-message-processing';
 const queueEvents = new QueueEvents(queueName, { connection });
-await queueEvents.waitUntilReady(); //
+await queueEvents.waitUntilReady(); 
 
 
 export default class MessageQueueService {
@@ -37,6 +33,7 @@ export default class MessageQueueService {
       });
 
       console.log(`Added job ${job.id} to queue`);
+
       return job;
     } catch (error) {
       console.error('Error adding job to queue:', error);
@@ -47,48 +44,4 @@ export default class MessageQueueService {
   static getQueueEvents() {
     return queueEvents;
   }
-  
-  // // Get queue statistics
-  // static async getQueueStats() {
-  //   try {
-  //     const waiting = await messageQueue.getWaiting();
-  //     const active = await messageQueue.getActive();
-  //     const completed = await messageQueue.getCompleted();
-  //     const failed = await messageQueue.getFailed();
-      
-  //     return {
-  //       waiting: waiting.length,
-  //       active: active.length,
-  //       completed: completed.length,
-  //       failed: failed.length
-  //     };
-  //   } catch (error) {
-  //     console.error('Error getting queue stats:', error);
-  //     throw error;
-  //   }
-  // }
-  
-  // // Clean old jobs
-  // static async cleanQueue() {
-  //   try {
-  //     await messageQueue.clean(24 * 60 * 60 * 1000, 'completed'); // Clean completed jobs older than 24 hours
-  //     await messageQueue.clean(24 * 60 * 60 * 1000, 'failed'); // Clean failed jobs older than 24 hours
-  //     console.log('Queue cleaned successfully');
-  //   } catch (error) {
-  //     console.error('Error cleaning queue:', error);
-  //     throw error;
-  //   }
-  // }
-  
-  // // Pause queue
-  // static async pauseQueue() {
-  //   await messageQueue.pause();
-  //   console.log('Queue paused');
-  // }
-  
-  // // Resume queue
-  // static async resumeQueue() {
-  //   await messageQueue.resume();
-  //   console.log('Queue resumed');
-  // }
 }

@@ -16,7 +16,7 @@ export default class UserRepo{
   }
 
   async checkUserExists(mobile){
-    const query = `SELECT U.id, U.name, U.email, U.mobile_number, U.password_hash, U.subscription_tier, U.created_at FROM users U WHERE U.mobile_number = $1`;
+    const query = `SELECT U.id, U.name, U.email, U.mobile_number, U.password_hash, U.subscription_tier, U.customer_id, U.subscription_id, U.created_at FROM users U WHERE U.mobile_number = $1`;
     const result = await pool.query(query, [mobile]);
     const final_user = result.rows.map(row => ({
       id: row.id, 
@@ -24,6 +24,9 @@ export default class UserRepo{
       email: row.email,
       mobile: row.mobile_number,
       password : row.password_hash,
+      subscription_tier:row.subscription_tier,
+      StripeCustomerID: row.customer_id,
+      StripeSubscriptionID:row.subscription_id,
       StripSubscription : row.subscription_tier,
       createdAT : row.created_at
     }));
@@ -77,15 +80,30 @@ export default class UserRepo{
     await pool.query(query, [newpassword, mobile]);
   }
 
-  async updateSubscription(userId, subsId){
-    const query = `UPDATE users SET subscription_id = $1 WHERE id = $2;`;
-    await pool.query(query, [subsId, userId]);
+  async updateSubscription(userId, customerid){
+    const query = `UPDATE users SET customer_id = $1 WHERE id = $2;`;
+    await pool.query(query, [customerid, userId]);
+  }
+
+  async updateSubscriptionId(mobile, subsID){
+    const query = `UPDATE users SET subscription_id = $1 WHERE mobile_number = $2 AND customer_id IS NOT NULL`;
+    await pool.query(query, [subsID , mobile]);
   }
 
   async updateSubscriptionStatus(mobile){
     console.log("iinside susb update..!");
-    const query = `UPDATE users SET subscription_tier = $1 WHERE mobile_number = $2 AND subscription_id IS NOT NULL`;
+    const query = `UPDATE users SET subscription_tier = $1 WHERE mobile_number = $2 AND customer_id IS NOT NULL`;
     await pool.query(query, ["Pro", mobile]);
+  }
+
+  async getMobileNoForHook(custID){
+    const query = `SELECT U.mobile_number FROM users U WHERE U.customer_id = $1`;
+    const result = await pool.query(query, [custID]);
+    const final_user = result.rows.map(row => ({
+      mobile: row.mobile_number
+    }));
+    console.log(final_user[0]);
+    return final_user[0];
   }
 
 }

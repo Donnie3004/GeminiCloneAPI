@@ -37,7 +37,9 @@ export default class UserController {
         throw new CustomError("Kindly enter the new password", 400);
       }
 
-      await this.repo.updatePassword(mobile, newpassword);
+      const hashed_password = await hashingPassword(newpassword);
+
+      await this.repo.updatePassword(mobile, hashed_password);
       return res.status(200).json({
         success:true,
         message:"Password changed succefully",
@@ -190,7 +192,9 @@ export default class UserController {
       if(!user_exists){
         throw new CustomError("User not exists, please sign up", 400);
       }
-
+      
+      const hashed_password = await hashingPassword(newpassword);
+      
       await this.repo.updatePassword(mobile, newpassword);
 
       return res.json({ 

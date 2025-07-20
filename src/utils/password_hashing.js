@@ -7,5 +7,5 @@ export async function hashingPassword(password, saltRound = 10) {
 }
 
 export async function verifyPassword(plainPassword, hashPassword) {
-  return await bcrypt.compare(plainPassword, hashPassword); // returns true or false
+  return await bcrypt.compare(plainPassword, hashPassword);
 }
