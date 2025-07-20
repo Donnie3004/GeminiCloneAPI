@@ -9,7 +9,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const app = express();
-const port = process.env.EXPRESS_PORT;
+const port = process.env.PORT;
 
 const WebhookController = new webhookController();
 app.post('/webhook', express.raw({ type: 'application/json' }), WebhookController.handleWebhook);
