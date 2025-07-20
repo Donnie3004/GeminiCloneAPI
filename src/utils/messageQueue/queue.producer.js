@@ -4,19 +4,29 @@ import CustomError from "../customError.js";
 import IORedis from 'ioredis';
 import dotenv from 'dotenv';
 dotenv.config();
+//process.env.REDIS_URL,
 
-const connection = new IORedis(process.env.REDIS_URL, {
-  // host: process.env.REDIS_HOST,
-  // port: Number(process.env.REDIS_PORT),
-  // password: undefined,
-  family:0,
-  maxRetriesPerRequest: null
+
+// const connection = new IORedis({
+//   host: process.env.REDIS_HOST,
+//   port: Number(process.env.REDIS_PORT),
+//   family:0,
+//   maxRetriesPerRequest: null
+// });
+
+
+const redisConnection = new IORedis(process.env.REDIS_URL);
+
+// Wait for Redis to connect before continuing
+redisConnection.on('error', err => {
+  console.error('Redis connection error:', err);
 });
-
-const queueName = process.env.QUEUE_NAME || 'gemini-message-processing';
-const queueEvents = new QueueEvents(queueName, { connection });
-await queueEvents.waitUntilReady(); 
-
+let queueEvents;
+redisConnection.on('ready', async () => {
+  const queueName = process.env.QUEUE_NAME || 'gemini-message-processing';
+  queueEvents = new QueueEvents(queueName, { redisConnection });
+  await queueEvents.waitUntilReady(); 
+});
 
 export default class MessageQueueService {
   // Add a new job to the queue
