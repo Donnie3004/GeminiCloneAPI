@@ -7,4 +7,5 @@ const redis = new Redis({
   port: Number(process.env.REDIS_PORT),      
 });
 
+
 export default redis;

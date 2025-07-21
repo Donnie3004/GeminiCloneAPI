@@ -6,7 +6,6 @@ import { pool } from './src/config/db.config.js';
 import chatroomRouter from './src/resources/chatroom/chatroom.routes.js';
 import webhookController from './src/resources/webhook/webhook.controller.js';
 import dotenv from 'dotenv';
-import redis from './src/config/redis.config.js';
 dotenv.config();
 
 const app = express();

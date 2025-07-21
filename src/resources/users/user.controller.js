@@ -195,7 +195,7 @@ export default class UserController {
       
       const hashed_password = await hashingPassword(newpassword);
       
-      await this.repo.updatePassword(mobile, newpassword);
+      await this.repo.updatePassword(mobile, hashed_password);
 
       return res.json({ 
         success:true,

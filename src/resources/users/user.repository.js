@@ -105,5 +105,4 @@ export default class UserRepo{
     console.log(final_user[0]);
     return final_user[0];
   }
-
 }

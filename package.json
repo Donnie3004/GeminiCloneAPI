@@ -5,9 +5,10 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev": "nodemon index.js",
+    "start:api":"node index.js",
+    "start:worker": "node src/utils/messageQueue/queue.worker.js",
     "start": "node index.js",
-    "worker": "node src/utils/messageQueue/queue.worker.js"
+    "dev":"nodemon index.js"
   },
   "author": "Arbaz Rehman Sheikh",
   "license": "ISC",

@@ -1,4 +1,3 @@
-import { pool } from "../../config/db.config.js";
 import stripe from "../../config/stripe.config.js";
 import dotenv from 'dotenv';
 import CustomError from "../../utils/customError.js";
