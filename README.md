@@ -44,3 +44,26 @@ Repository takes care of DB operations.
 
 <img width="1218" height="857" alt="image" src="https://github.com/user-attachments/assets/620af337-0633-4b99-8f95-3391f10d8fae" />
 
+
+<img width="1100" height="841" alt="image" src="https://github.com/user-attachments/assets/c66c1d7f-7ee3-411f-a8ea-f189362d7c7e" />
+
+
+<img width="1332" height="845" alt="image" src="https://github.com/user-attachments/assets/c22c4eac-2f57-49d3-96a6-dd9242af0931" />
+
+
+<img width="1002" height="847" alt="image" src="https://github.com/user-attachments/assets/a42eddb9-e7bb-44b9-8e52-0c7d9983de72" />
+
+
+<img width="1195" height="842" alt="image" src="https://github.com/user-attachments/assets/d69d3366-55bc-4f68-b826-c23f4d9c69c9" />
+
+
+<img width="1147" height="830" alt="image" src="https://github.com/user-attachments/assets/5581354c-9ced-4f52-aa60-1b7bd2b42c0a" />
+
+
+<img width="1197" height="837" alt="image" src="https://github.com/user-attachments/assets/fcd4ab7b-fcd9-4ec7-88a3-abfadaa99977" />
+
+
+<img width="1461" height="857" alt="image" src="https://github.com/user-attachments/assets/2388cfca-443c-4a56-b9da-cab793313881" />
+
+
+<img width="1127" height="837" alt="image" src="https://github.com/user-attachments/assets/c80bef28-0bab-45ee-ac1b-1aeb0c630bdd" />
