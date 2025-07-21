@@ -41,3 +41,6 @@ Archietecture used : Controller - Routes - Repository
 Controller takes care of all the logic implementation for each functionality.
 Routes takes care of endpoint implementation.
 Repository takes care of DB operations.
+
+<img width="1218" height="857" alt="image" src="https://github.com/user-attachments/assets/620af337-0633-4b99-8f95-3391f10d8fae" />
+
